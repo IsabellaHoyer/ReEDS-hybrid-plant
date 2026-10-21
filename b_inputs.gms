@@ -1128,6 +1128,11 @@ thermal_storage(i)$storage_hybrid_with_tes(i) = yes ;
 
 geo_storage(i)$[storage_hybrid(i)$sum(ii$[storage_hybrid_stortech(i,ii)$geo_storage(ii)],1)] = yes ;
 
+
+* Inherit the interday-storage flag from the storage technology so the wrapper
+* (e.g. storage-hybrid-1-egs_allkm_5) is treated as interday whenever flex-geo is.
+storage_interday(i)$[storage_hybrid(i)$sum{ii$[storage_hybrid_stortech(i,ii)$storage_interday(ii)], 1}] = yes ;
+
 * Storage-hybrid configs split by gen-tech behavior:
 * - storage_hybrid_vre(i): config's gen tech is variable renewable (uses m_cf for derating)
 * - storage_hybrid_dispatchable(i): config's gen tech is dispatchable (uses raw CAP)
