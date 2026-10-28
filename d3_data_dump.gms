@@ -373,6 +373,7 @@ execute_unload 'ReEDS_Augur%ds%augur_data%ds%reeds_data_%cur_year%.gdx'
     flex_load_opt
     fuel_price_filt
     fuel2tech
+    gridcharge_ratio
     gen_h_stress_filt
     geo
     h_szn

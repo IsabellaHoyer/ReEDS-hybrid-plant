@@ -131,5 +131,11 @@ function parse_reeds_data(
     #@info "Processing GeneratorStorages"
     #genstor_array = process_genstors(genstor_array, get_name.(regions), timesteps)
 
+    @info "Processing storage-hybrid wrappers as generator-storages..."
+    append!(
+        genstor_array,
+        process_storage_hybrids(ReEDS_data, FOR_dict, timesteps, mttr_dict, scheduled_outage_hourly),
+    )
+
     return lines, regions, gens_array, storage_array, genstor_array
 end

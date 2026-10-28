@@ -190,12 +190,7 @@ function split_generator_types(ReEDS_data::ReEDSdatapaths)
     @debug "hd_types is $(union(hyd_disp_types,hyd_non_disp_types))"
 
     storage_types =
-        unique(vcat(
-            DataFrames.dropmissing(tech_subset_table, :STORAGE_STANDALONE)[:, "Column1"],
-            DataFrames.dropmissing(
-                tech_subset_table, Symbol("STORAGE-HYBRID")
-            )[:, "Column1"],
-        ))
+        unique(DataFrames.dropmissing(tech_subset_table, :STORAGE_STANDALONE)[:, "Column1"])
 
     @debug "storage type is $(storage_types)"
 
@@ -698,6 +693,85 @@ function process_hydro(
 end
 
 """
+    Build PRAS GeneratorStorage objects for storage-hybrid wrappers (a generator
+    with attached storage, e.g. EGS + in-reservoir storage). Data come from
+    ReEDS_Augur/augur_data/storage_hybrid_{year}.csv written by prep_data.py.
+
+    Mapping (per wrapper, per region):
+      inflow             = gen_MW * (1 - FOR)   baseload plant output arriving every hour
+      charge/discharge   = stor_MW              storage power (= bcr * CAP)
+      energy_cap         = energy_MWh           reservoir (LP's CAP_ENERGY)
+      grid_withdrawl_cap = gridcharge_MW        grid charging
+      grid_inj_cap       = inj_MW               max to grid (= CAP * (1 + bcr))
+      charge_eff         = charge_eff           same RTE as the LP; discharge_eff = 1
+    Note: PRAS lets inflow charge the storage, so plant-side charging is allowed
+    here even where the LP forbids it (grid-only configs). Conservative for adequacy.
+"""
+function process_storage_hybrids(
+    ReEDS_data::ReEDSdatapaths,
+    FOR_dict::Dict,
+    timesteps::Int,
+    mttr_dict::Dict,
+    scheduled_outage_hourly::Union{Nothing, DataFrames.DataFrame},
+)
+    genstor_array = Gen_Storage[]
+    hyb = get_storage_hybrid_data(ReEDS_data)
+    DataFrames.nrow(hyb) == 0 && return genstor_array
+
+    # one object per (tech, region): sum over vintages
+    hyb = DataFrames.combine(
+        DataFrames.groupby(hyb, ["i", "r"]),
+        :gen_MW => sum => :gen_MW,
+        :stor_MW => sum => :stor_MW,
+        :energy_MWh => sum => :energy_MWh,
+        :gridcharge_MW => sum => :gridcharge_MW,
+        :inj_MW => sum => :inj_MW,
+        :charge_eff => first => :charge_eff,
+    )
+
+    for row in DataFrames.eachrow(hyb)
+        category = String(row.i)
+        region = String(row.r)
+        name = "$(category)_$(region)"
+
+        # forced outage: static rate from outage_forced_static.csv (0 if missing)
+        gen_for = fill(Float32(get(FOR_dict, lowercase(category), 0.0)), timesteps)
+        gen_sor = zeros(Float32, timesteps)
+        if !isnothing(scheduled_outage_hourly) && category in DataFrames.names(scheduled_outage_hourly)
+            gen_sor = scheduled_outage_hourly[!, category]
+        end
+        mttr = Int64(get(mttr_dict, category, 24))
+
+        # as with hydro, apply outages by derating the inflow rather than via FOR
+        inflow = fill(Float64(row.gen_MW), timesteps) .* (1 .- gen_for)
+
+        push!(
+            genstor_array,
+            Gen_Storage(
+                name = name,
+                timesteps = timesteps,
+                region_name = region,
+                type = category,
+                charge_cap = fill(Float64(row.stor_MW), timesteps),
+                discharge_cap = fill(Float64(row.stor_MW), timesteps),
+                energy_cap = fill(Float64(row.energy_MWh), timesteps),
+                inflow = inflow,
+                grid_withdrawl_cap = fill(Float64(row.gridcharge_MW), timesteps),
+                grid_inj_cap = fill(Float64(row.inj_MW), timesteps),
+                legacy = "New",
+                charge_eff = Float64(row.charge_eff),
+                discharge_eff = 1.0,
+                carryover_eff = 1.0,
+                FOR = zeros(Float32, timesteps),
+                SOR = gen_sor,
+                MTTR = mttr,
+            ),
+        )
+    end
+    return genstor_array
+end
+
+"""
     Process data associated with the regional storage build for modeled time
     period
 
@@ -759,16 +833,7 @@ function process_storages(
 
     ## Read {case}/inputs_case/tech-subset-table.csv
     tech_subset_table = get_technology_types(ReEDS_data)
-    # Storage-Hybrid wrappers are routed through the lumped Battery(...) path
-    # alongside techs tagged BATTERY. They are not in the GAMS `battery(i)` set,
-    # so we union the BATTERY and STORAGE-HYBRID tech-subset columns here
-    # without touching GAMS subset semantics.
-    battery_types = unique(vcat(
-        DataFrames.dropmissing(tech_subset_table, :BATTERY)[:, "Column1"],
-        DataFrames.dropmissing(
-            tech_subset_table, Symbol("STORAGE-HYBRID")
-        )[:, "Column1"],
-    ))
+    battery_types = DataFrames.dropmissing(tech_subset_table, :BATTERY)[:, "Column1"] 
 
     storages_array = Storage[]
     for (idx, row) in enumerate(eachrow(storage_builds))

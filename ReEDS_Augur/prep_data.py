@@ -536,6 +536,47 @@ def main(t, casedir, iteration=0):
     csvout['charge_eff'] = storage_eff
     csvout['discharge_eff'] = pd.Series(index=storage_eff.index, data=1., name='fraction')
 
+    #%%### Storage-hybrid wrappers (e.g. EGS + in-reservoir storage) -> PRAS GeneratorStorage
+    ## In the LP a wrapper is a single tech whose nameplate CAP is the plant; its storage
+    ## power is bcr*CAP and its reservoir is CAP_ENERGY. PRAS needs these as separate
+    ## numbers, so write a dedicated table and REMOVE the wrappers from max_cap/energy_cap
+    ## (otherwise reeds2pras would model the whole plant as a battery with no generator).
+    if len(_storage_hybrid_techs):
+        hyb = (
+            cap_storage_devint.loc[cap_storage_devint.i.isin(_storage_hybrid_techs)]
+            .set_index(['i','v','r']).Value.rename('gen_MW')
+        )
+        hyb = hyb[hyb > 0].to_frame()
+        techs = hyb.index.get_level_values('i')
+        bcr = gdxreeds['bcr'].set_index('i').Value
+        gridcharge = (
+            gdxreeds['gridcharge_ratio'].set_index('i').Value
+            if 'gridcharge_ratio' in gdxreeds
+            else pd.Series(0., index=bcr.index)
+        )
+        ## storage power = bcr * plant nameplate
+        hyb['stor_MW'] = hyb.gen_MW.values * bcr.reindex(techs).fillna(0).values
+        ## reservoir energy from the LP's CAP_ENERGY (already collapsed to vintage new1)
+        hyb['energy_MWh'] = (
+            cap_energy_ivr.set_index(['i','v','r']).Value
+            .reindex(hyb.index).fillna(0).values
+        )
+        ## grid charging power = gridcharge_ratio * CAP, but never more than storage power
+        hyb['gridcharge_MW'] = np.minimum(
+            hyb.gen_MW.values * gridcharge.reindex(techs).fillna(0).values,
+            hyb.stor_MW.values,
+        )
+        ## max power to grid = plant + storage discharge  (CAP*(1+bcr))
+        hyb['inj_MW'] = hyb.gen_MW + hyb.stor_MW
+        ## charging efficiency (grid-charging RTE from GAMS, same as the LP)
+        hyb['charge_eff'] = storage_eff.reindex(techs).fillna(1.).values
+        csvout['storage_hybrid'] = hyb.round(4)
+
+        ## Drop the wrappers from the battery exports
+        for key in ['max_cap', 'energy_cap']:
+            idx = csvout[key].index
+            csvout[key] = csvout[key].loc[~idx.get_level_values('i').isin(_storage_hybrid_techs)]
+
     #%% Planning reserve margin in MW (sometimes used during unit disaggregation)
     csvout['max_unitsize'] = (
         gdxreeds['prm'].loc[gdxreeds['prm'].t == t].set_index('r').Value

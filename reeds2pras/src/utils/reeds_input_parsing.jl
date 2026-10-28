@@ -388,6 +388,23 @@ function get_storage_energy_capacity_data(data::ReEDSdatapaths)
 end
 
 """
+    Returns a DataFrame of storage-hybrid wrappers (EGS + in-reservoir storage etc.)
+    written by ReEDS_Augur/prep_data.py: columns i, v, r, gen_MW, stor_MW,
+    energy_MWh, gridcharge_MW, inj_MW, charge_eff. Returns an empty DataFrame
+    if the file does not exist (no storage-hybrid techs in this run).
+"""
+function get_storage_hybrid_data(data::ReEDSdatapaths)
+    filepath = joinpath(
+        data.ReEDSfilepath,
+        "ReEDS_Augur",
+        "augur_data",
+        "storage_hybrid_$(string(data.year)).csv",
+    )
+    isfile(filepath) || return DataFrames.DataFrame()
+    return DataFrames.DataFrame(CSV.File(filepath))
+end
+
+"""
     Returns a DataFrame containing the hourly planned outage data,
     read from reeds2pras/test/reeds_cases/Pacific/inputs_case
 
