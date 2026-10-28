@@ -768,6 +768,13 @@ function process_storage_hybrids(
             ),
         )
     end
+    @info "Built $(length(genstor_array)) storage-hybrid generator-storage object(s)" *
+          (isempty(genstor_array) ? "" :
+           " — e.g. $(genstor_array[1].name): gen $(round(genstor_array[1].inflow[1]; digits=1)) MW, " *
+           "storage $(round(genstor_array[1].discharge_cap[1]; digits=1)) MW / " *
+           "$(round(genstor_array[1].energy_cap[1]; digits=0)) MWh, " *
+           "grid charge $(round(genstor_array[1].grid_withdrawl_cap[1]; digits=1)) MW, " *
+           "max inject $(round(genstor_array[1].grid_inj_cap[1]; digits=1)) MW")
     return genstor_array
 end
 
