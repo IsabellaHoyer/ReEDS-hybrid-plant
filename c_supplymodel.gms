@@ -3459,7 +3459,7 @@ eq_cap_storage_in_grid(i,v,r,h,t)$[storage_hybrid(i)$hybrid_plant(i)$(not csp(i)
     STORAGE_IN_GRID(i,v,r,h,t)
 ;
 
-eq_storage_hybrid_geo_storage_grid_only(i,v,r,h,t)$[storage_hybrid(i)$geo_storage(i)$hybrid_plant(i)$(not csp(i))$tmodel(t)$valgen(i,v,r,t)$valcap(i,v,r,t)$Sw_HybridPlant]..
+eq_storage_hybrid_geo_storage_grid_only(i,v,r,h,t)$[storage_hybrid(i)$geo_storage(i)$hybrid_plant(i)$(not csp(i))$tmodel(t)$valgen(i,v,r,t)$valcap(i,v,r,t)$Sw_HybridPlant$Sw_StorageHybrid_GeoGridOnly]..
     STORAGE_IN_PLANT(i,v,r,h,t)
 
     =e=
