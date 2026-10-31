@@ -315,6 +315,7 @@ eq_interconnection_queues(tg,r,t)         "--MW-- capacity deployment limit base
  eq_storage_opres(i,v,r,allh,t)                   "--MWh-- there must be sufficient energy in the storage to be able to provide operating reserves"
 *  eq_storage_thermalres(i,v,r,allh,t)              "--MW-- thermal storage contribution to operating reserves is store_in only"
  eq_battery_minduration(i,v,r,t)                  "--MWh-- when power capacity is built, energy capacity should have a minimum capacity"
+eq_storage_hybrid_maxduration(i,v,r,t)           "--MWh-- cap reservoir energy capacity of geo storage hybrids at MaxDur hours of storage power"
 
 * hybrid plant equations
  eq_plant_total_gen(i,v,r,allh,t)                "--MW-- generation post curtailment = generation from pv (post curtailment) + generation from battery - charging from PV"
@@ -3247,6 +3248,19 @@ eq_battery_minduration(i,v,r,t)$[valcap(i,v,r,t)$tmodel(t)$newv(v)$(battery(i) o
     + CAP(i,v,r,t) * mintesduration$tes(i)
 
     + CAP(i,v,r,t) * bcr(i) * min_storage_hybrid_duration$storage_hybrid(i)
+;
+
+* ---------------------------------------------------------------------------
+* for in-reservoir geothermal storage hybrids
+* reservoir energy capacity cannot exceed MaxDur hours of storage power (bcr * CAP).
+* Only active when Sw_StorageHybrid_MaxDur > 0; otherwise the reservoir is unbounded.
+eq_storage_hybrid_maxduration(i,v,r,t)$[valcap(i,v,r,t)$tmodel(t)$newv(v)$storage_hybrid(i)$geo_storage(i)$Sw_StorageHybrid_MaxDur]..
+
+    CAP(i,v,r,t) * bcr(i) * Sw_StorageHybrid_MaxDur
+
+    =g=
+
+    CAP_ENERGY(i,v,r,t)
 ;
 
 * ---------------------------------------------------------------------------
