@@ -3267,17 +3267,19 @@ eq_storage_hybrid_maxduration(i,v,r,t)$[valcap(i,v,r,t)$tmodel(t)$newv(v)$storag
 
 * Constraints for building inter-day storage linkage
 * The storage level at hour 0 of next partition
-* equals to the storage level at hour 0 of current partition
-* plus number of period of current partition multiply by storage net change of the rep period
+* equals to the storage level at hour 0 of current partition, decayed by any hold loss over the partition,
+* plus the rep-period net change scaled by the number of days in the partition (also decayed when hold loss > 0).
+* interday_carry = (1-loss)^N and interday_flowmult = (1-(1-loss)^N)/loss are set in d1_temporal_params.gms;
+* with zero hold loss they reduce to 1 and N, recovering the original lossless linkage.
 eq_storage_interday_level(i,v,r,allszn,t)$[valgen(i,v,r,t)$storage_interday(i)$tmodel(t)$numpartitions(allszn)]..
     
     sum{allsznn$[nextpartition(allszn,allsznn)],STORAGE_INTERDAY_LEVEL(i,v,r,allsznn,t)}
 
     =e=
 
-    STORAGE_INTERDAY_LEVEL(i,v,r,allszn,t) 
+    STORAGE_INTERDAY_LEVEL(i,v,r,allszn,t) * interday_carry(i,allszn)
     
-    + numpartitions(allszn)
+    + interday_flowmult(i,allszn)
     * sum{(szn)$[szn_actualszn(szn,allszn)$numpartitions(allszn)],
           sum{h$[h_szn(h,szn)], (STORAGE_INTERDAY_DISPATCH(i,v,r,h,t) * hours_daily(h))}}
 ;

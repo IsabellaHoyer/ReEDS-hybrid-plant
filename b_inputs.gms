@@ -4493,6 +4493,11 @@ $offempty
 parameter gridcharge_ratio(i) "--unitless-- ratio of grid charging capacity to generation capacity for each storage-hybrid configuration" ;
 gridcharge_ratio(i)$storage_hybrid(i) = gridcharge_storage_hybrid_config(i) ;
 
+* Daily hold (self-discharge) loss for in-reservoir geothermal storage hybrids [Sw_StorageHybrid_HoldLoss]
+parameter storage_hold_loss(i) "--fraction/day-- share of stored energy lost per day while held in the reservoir" ;
+storage_hold_loss(i) = 0 ;
+storage_hold_loss(i)$[storage_hybrid(i)$geo_storage(i)] = Sw_StorageHybrid_HoldLoss ;
+
 *=========================================
 * --- Capital costs ---
 *=========================================
@@ -6968,6 +6973,9 @@ Set
     hour_szn_group(allh,allh)              "h and hh in the same season - used in minloading constraint"
 ;
 
+* Inter-day hold-loss multipliers (populated each solve year in d1_temporal_params.gms, after numpartitions is loaded)
+parameter interday_carry(i,allszn)    "--fraction-- share of the hour-0 storage level that survives to hour 0 of the next partition after hold losses",
+          interday_flowmult(i,allszn) "--days-- multiplier on the rep-day net charge across a partition, accounting for hold losses (= numpartitions when lossless)" ;
 Parameter
 * Hour/period weighting
     hours(allh)                            "--hours-- number of hours in each time block"

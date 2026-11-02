@@ -214,6 +214,20 @@ $offdelim
 $onlisting
 / ;
 $OFFEMPTY
+
+* Inter-day hold-loss multipliers for geothermal storage hybrids [Sw_StorageHybrid_HoldLoss]
+* carry:    the hour-0 level decays by (1 - loss) on each of the partition's N days
+* flowmult: the rep-day net charge is added every day and earlier days' additions also decay,
+*           so the total is a geometric series = (1 - (1-loss)^N) / loss, which equals N when loss = 0
+interday_carry(i,allszn) = 0 ;
+interday_flowmult(i,allszn) = 0 ;
+interday_carry(i,allszn)$[storage_interday(i)$numpartitions(allszn)]
+    = (1 - storage_hold_loss(i)) ** numpartitions(allszn) ;
+interday_flowmult(i,allszn)$[storage_interday(i)$numpartitions(allszn)]
+    = numpartitions(allszn) ;
+interday_flowmult(i,allszn)$[storage_interday(i)$numpartitions(allszn)$storage_hold_loss(i)]
+    = (1 - interday_carry(i,allszn)) / storage_hold_loss(i) ;
+    
 parameter numhours_nexth(allh,allhh) "--hours-- number of times hh follows h throughout year"
 /
 $offlisting

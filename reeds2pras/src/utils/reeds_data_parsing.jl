@@ -727,6 +727,7 @@ function process_storage_hybrids(
         :gridcharge_MW => sum => :gridcharge_MW,
         :inj_MW => sum => :inj_MW,
         :charge_eff => first => :charge_eff,
+        :carryover_eff => first => :carryover_eff,
     )
 
     for row in DataFrames.eachrow(hyb)
@@ -761,7 +762,7 @@ function process_storage_hybrids(
                 legacy = "New",
                 charge_eff = Float64(row.charge_eff),
                 discharge_eff = 1.0,
-                carryover_eff = 1.0,
+                carryover_eff = Float64(row.carryover_eff),
                 FOR = zeros(Float32, timesteps),
                 SOR = gen_sor,
                 MTTR = mttr,

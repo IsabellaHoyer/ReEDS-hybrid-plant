@@ -570,7 +570,14 @@ def main(t, casedir, iteration=0):
         hyb['inj_MW'] = hyb.gen_MW + hyb.stor_MW
         ## charging efficiency (grid-charging RTE from GAMS, same as the LP)
         hyb['charge_eff'] = storage_eff.reindex(techs).fillna(1.).values
-        csvout['storage_hybrid'] = hyb.round(4)
+        ## hold (self-discharge) loss: GAMS gives fraction/day; PRAS wants a per-hour carryover efficiency
+        hold_loss = (
+            gdxreeds['storage_hold_loss'].set_index('i').Value
+            if 'storage_hold_loss' in gdxreeds
+            else pd.Series(0., index=bcr.index)
+        )
+        hyb['carryover_eff'] = (1 - hold_loss.reindex(techs).fillna(0).values) ** (1/24)        
+        csvout['storage_hybrid'] = hyb.round(6)
 
         ## Drop the wrappers from the battery exports
         for key in ['max_cap', 'energy_cap']:
