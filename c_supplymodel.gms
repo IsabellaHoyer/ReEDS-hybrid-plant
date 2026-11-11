@@ -3254,11 +3254,12 @@ eq_battery_minduration(i,v,r,t)$[valcap(i,v,r,t)$tmodel(t)$newv(v)$(battery(i) o
 
 * ---------------------------------------------------------------------------
 * for in-reservoir geothermal storage hybrids
-* reservoir energy capacity cannot exceed MaxDur hours of storage power (bcr * CAP).
+* reservoir energy capacity cannot exceed MaxDur MWh per MW of baseload capacity (CAP).
+* The reservoir is a property of the well field, so the cap does not scale with bcr.
 * Only active when Sw_StorageHybrid_MaxDur > 0; otherwise the reservoir is unbounded.
 eq_storage_hybrid_maxduration(i,v,r,t)$[valcap(i,v,r,t)$tmodel(t)$newv(v)$storage_hybrid(i)$geo_storage(i)$Sw_StorageHybrid_MaxDur]..
 
-    CAP(i,v,r,t) * bcr(i) * Sw_StorageHybrid_MaxDur
+    CAP(i,v,r,t) * Sw_StorageHybrid_MaxDur
 
     =g=
 
