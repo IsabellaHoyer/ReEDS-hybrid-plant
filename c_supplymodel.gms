@@ -2036,8 +2036,10 @@ eq_POI_cap(r,t)
 
     =g=
 
-* must be greater than the sum of all generation capacity [AC] without explicit spur lines...
-    sum{(i,v)$[valcap(i,v,r,t)$(not spur_techs(i))], CAP(i,v,r,t) / ilr(i) }
+* must be greater than the sum of all generation capacity [AC] without explicit spur lines
+* (storage-hybrid wrappers count at their oversized export rating, CAP * (1 + bcr))...
+        sum{(i,v)$[valcap(i,v,r,t)$(not spur_techs(i))],
+            CAP(i,v,r,t) * (1 + bcr(i)$storage_hybrid(i)) / ilr(i) }
 * and spur-line capacity if explicitly tracked (use total capacity, not just new investments,
 * to make sure we account for the existing spur line capacity already included in poi_cap_init)...
     + sum{x$[xfeas(x)$x_r(x,r)$Sw_SpurScen], CAP_SPUR(x,t) }
