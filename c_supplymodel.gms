@@ -3426,7 +3426,7 @@ eq_hybrid_plant_energy_limit(i,v,r,h,t)$[hybrid_plant(i)$(not csp(i))$tmodel(t)$
 * [plus] plant output
     m_cf(i,v,r,h,t) * CAP(i,v,r,t)$(pvb(i) or storage_hybrid_vre(i))
 
-    + CAP(i,v,r,t)$storage_hybrid_dispatchable(i)
+    + avail(i,r,h) * CAP(i,v,r,t)$storage_hybrid_dispatchable(i)
 
     =g=
 
@@ -3450,7 +3450,7 @@ eq_plant_capacity_limit(i,v,r,h,t)$[hybrid_plant(i)$(not csp(i))$tmodel(t)$valge
 
 *[plus] inverter capacity [AC] = panel capacity [DC] / ILR [DC/AC]
     + CAP(i,v,r,t)$pvb(i) / ilr(i)
-    + CAP(i,v,r,t)$(storage_hybrid(i))*(1 + bcr(i))
+    + avail(i,r,h) * CAP(i,v,r,t)$(storage_hybrid(i))*(1 + bcr(i))
 
     =g=
 

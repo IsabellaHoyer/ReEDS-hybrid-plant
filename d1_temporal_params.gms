@@ -385,8 +385,8 @@ $onlisting
 
 * Infer some forced outage rates from parent techs
 outage_forced_h(i,r,h)$pvb(i) = outage_forced_h("battery_li",r,h) ;
-outage_forced_h(i,r,h)$storage_hybrid(i) = sum{ii$storage_hybrid_gentech(i,ii), outage_forced_h(ii,r,h) } ;
 outage_forced_h(i,r,h)$geo(i) = outage_forced_h("geothermal",r,h) ;
+outage_forced_h(i,r,h)$storage_hybrid(i) = sum{ii$storage_hybrid_gentech(i,ii), outage_forced_h(ii,r,h) } ;
 
 outage_forced_h(i,r,h)$[i_water_cooling(i)$Sw_WaterMain] =
     sum{ii$ctt_i_ii(i,ii), outage_forced_h(ii,r,h) } ;
@@ -406,8 +406,8 @@ $onlisting
 
 * Infer some scheduled outage rates from parent techs
 outage_scheduled_h(i,h)$pvb(i) = outage_scheduled_h("battery_li",h) ;
-outage_scheduled_h(i,h)$storage_hybrid(i) = sum{ii$storage_hybrid_gentech(i,ii), outage_scheduled_h(ii,h) } ;
 outage_scheduled_h(i,h)$geo(i) = outage_scheduled_h("geothermal",h) ;
+outage_scheduled_h(i,h)$storage_hybrid(i) = sum{ii$storage_hybrid_gentech(i,ii), outage_scheduled_h(ii,h) } ;
 
 outage_scheduled_h(i,h)$[i_water_cooling(i)$Sw_WaterMain] =
     sum{ii$ctt_i_ii(i,ii), outage_scheduled_h(ii,h) } ;
