@@ -3224,6 +3224,9 @@ RecTrade("CES_bundled",st,ast,t)$[(rectable(ast,st)=2)$RecStates("CES",ast,t)] =
 
 *Assign eligible techs for RPS_All
 RPSCat_i("RPS_All",i,st)$[re(i)$(not techs_banned_rps(i,st))$valcap_i(i)] = yes ;
+* Storage-hybrid wrappers inherit RPS eligibility from their generation technology
+RPSCat_i("RPS_All",i,st)$[storage_hybrid(i)$(not techs_banned_rps(i,st))$valcap_i(i)
+  $sum{ii$[storage_hybrid_gentech(i,ii)$i_subsets(ii,'re')], 1}] = yes ;
 
 *Assign eligible techs for RPS_Wind
 RPSCat_i("RPS_Wind",i,st)$[wind(i)$(not techs_banned_rps(i,st))$valcap_i(i)] = yes ;
