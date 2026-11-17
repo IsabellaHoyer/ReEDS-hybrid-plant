@@ -3071,7 +3071,7 @@ eq_storage_capacity(i,v,r,h,t)$[valgen(i,v,r,t)
     + STORAGE_IN(i,v,r,h,t)$[not hybrid_plant(i)$(not csp(i))] / (1$(not evmc_storage(i)) + evmc_storage_charge_frac(i,r,h,t)$evmc_storage(i)) 
    
 * hybrid+storage plant: plant generation
-    + STORAGE_IN_PLANT(i,v,r,h,t)$[hybrid_plant(i)$(not csp(i))$Sw_HybridPlant]
+    + STORAGE_IN_PLANT(i,v,r,h,t)$[hybrid_plant(i)$(not csp(i))$Sw_HybridPlant$((not geo_storage(i)) or (not Sw_StorageHybrid_GeoMaxCharge))]
 * hybrid+storage plant: Grid generation
     + STORAGE_IN_GRID(i,v,r,h,t)$[hybrid_plant(i)$(not csp(i))$Sw_HybridPlant]
 
@@ -3437,7 +3437,7 @@ eq_hybrid_plant_energy_limit(i,v,r,h,t)$[hybrid_plant(i)$(not csp(i))$tmodel(t)$
 *storage_in_plant must be less than gen_plant
 eq_hybrid_plant_storage_limit(i,v,r,h,t)$[hybrid_plant(i)$(not csp(i))$tmodel(t)$valgen(i,v,r,t)$valcap(i,v,r,t)$Sw_HybridPlant]..
 
-    GEN_PLANT(i,v,r,h,t)
+    GEN_PLANT(i,v,r,h,t) * (1 + (Sw_StorageHybrid_GeoMaxCharge - 1)$[geo_storage(i)$Sw_StorageHybrid_GeoMaxCharge])
 
     =g=
 
@@ -3458,7 +3458,7 @@ eq_plant_capacity_limit(i,v,r,h,t)$[hybrid_plant(i)$(not csp(i))$tmodel(t)$valge
     + GEN_PLANT(i,v,r,h,t)
 
 * [minus] energy to storage from hybrid plant
-    + STORAGE_IN_PLANT(i,v,r,h,t)
+    + STORAGE_IN_PLANT(i,v,r,h,t)$((not geo_storage(i)) or (not Sw_StorageHybrid_GeoMaxCharge))
 
 * [plus] Output form storage
     + GEN_STORAGE(i,v,r,h,t)
@@ -3497,7 +3497,7 @@ eq_hybrid_storage_capacity_limit(i,v,r,h,t)$[hybrid_plant(i)$(not csp(i))$tmodel
     + GEN_STORAGE(i,v,r,h,t)
 
 * [plus] storage charging from hybrid plant
-    + STORAGE_IN_PLANT(i,v,r,h,t)
+    + STORAGE_IN_PLANT(i,v,r,h,t)$((not geo_storage(i)) or (not Sw_StorageHybrid_GeoMaxCharge))
     
 * [plus] storage charging from grid
     + STORAGE_IN_GRID(i,v,r,h,t)
