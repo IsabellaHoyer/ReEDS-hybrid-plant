@@ -4726,7 +4726,7 @@ cost_fom(i,v,r,t)$[valcap(i,v,r,t)$pvb(i)] = cost_fom_pvb_p(i,v,r,t) + bcr(i) * 
 
 * Assign storage-hybrid plant-side fixed O&M from the configured generation tech
 parameter cost_fom_storage_hybrid_p(i,v,r,t) "--2004$/MW-- fixed OM for generation portion of storage-hybrid" ;
-cost_fom_storage_hybrid_p(i,v,r,t)$storage_hybrid(i) = sum{ii$ storage_hybrid_gentech(i,ii), plant_char(ii,v,t, 'fom')};
+cost_fom_storage_hybrid_p(i,v,r,t)$storage_hybrid(i) = sum{ii$ storage_hybrid_gentech(i,ii), cost_fom(ii,v,r,t)};
 
 * Assign storage-hybrid storage-side fixed O&M from the configured storage tech
 parameter cost_fom_storage_hybrid_s(i,v,r,t) "--2004$/MW-- fixed OM for storage portion of storage-hybrid" ;
