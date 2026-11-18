@@ -736,7 +736,10 @@ function process_storage_hybrids(
         name = "$(category)_$(region)"
 
         # forced outage: static rate from outage_forced_static.csv (0 if missing)
-        gen_for = fill(Float32(get(FOR_dict, lowercase(category), 0.0)), timesteps)
+        # storage-hybrid wrappers are not listed in outage_forced_static.csv, so geothermal
+        # wrappers (EGS / hydrothermal) fall back to the geothermal forced outage rate
+        is_geo = occursin("egs", lowercase(category)) || occursin("geohydro", lowercase(category))
+        gen_for = fill(Float32(get(FOR_dict, lowercase(category), is_geo ? get(FOR_dict, "geothermal", 0.0) : 0.0)), timesteps)
         gen_sor = zeros(Float32, timesteps)
         if !isnothing(scheduled_outage_hourly) && category in DataFrames.names(scheduled_outage_hourly)
             gen_sor = scheduled_outage_hourly[!, category]
